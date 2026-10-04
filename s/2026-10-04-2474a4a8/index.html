@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>1st Blisworth</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕹️</text></svg>">
+<style>:root { --bg: #f4f1fb; --panel: #fff; --ink: #1d1530; --muted: #6b6382; --brand: #6a1fd1; --line: #e2dcef; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #14111f; --panel: #1f1a2e; --ink: #eeeaf7; --muted: #a59fbb; --brand: #9a5cff; --line: #342c4a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.top { background: var(--brand); color: #fff; padding: 12px 16px; font-weight: 800; font-size: 20px; }
+.top a { color: inherit; text-decoration: none; }
+.page { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
+.lead { font-size: 18px; }
+.muted { color: var(--muted); }
+.hidden { display: none !important; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-bottom: 24px; }
+.card { display: block; text-align: left; background: var(--panel); color: inherit; border: 2px solid transparent; border-radius: 14px; padding: 16px; box-shadow: 0 2px 10px rgba(40,20,80,.08); text-decoration: none; font: inherit; cursor: pointer; }
+.card:hover { border-color: var(--brand); }
+.card h2, .card h3 { margin: 0 0 4px; }
+.by { color: var(--muted); font-size: 14px; }
+.stars { color: #f5b301; letter-spacing: 1px; }
+.award-label { font-weight: 700; color: var(--brand); margin-bottom: 4px; }
+footer { text-align: center; color: var(--muted); font-size: 14px; padding: 24px 16px 40px; }
+.btn { font: inherit; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.modal-back { position: fixed; inset: 0; background: rgba(10,5,25,.7); display: flex; align-items: center; justify-content: center; padding: 10px; z-index: 10; }
+.modal { background: var(--panel); border-radius: 14px; padding: 14px; width: min(1000px, 100%); max-height: 100%; overflow: auto; }
+.modal-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.modal-head h2 { margin: 0; }
+.spacer { flex: 1; }
+.player { aspect-ratio: 8 / 5; width: min(100%, 140vh); margin: 0 auto; background: #000; border-radius: 10px; overflow: hidden; }
+.player iframe { width: 100%; height: 100%; border: 0; }
+.rotate-hint { display: none; }
+@media (orientation: portrait) and (pointer: coarse) { .rotate-hint { display: block; } }
+@media (orientation: landscape) and (max-height: 500px) {
+  .modal { padding: 6px; } .modal .muted { display: none; }
+  .player { width: min(100%, calc((100vh - 60px) * 1.6)); }
+}
+</style>
+</head>
+<body>
+<header class="top"><a class="logo" href="../../">🎮🤖</a> <span id="title"></span></header>
+<main class="page">
+  <p class="muted" id="when"></p>
+  <section id="awards-wrap" class="hidden">
+    <h2>🏆 Awards</h2>
+    <div class="grid" id="awards"></div>
+  </section>
+  <h2>🕹️ The games</h2>
+  <p class="muted">Tap a game to play. Most games use the arrow keys and SPACE; on a phone or tablet, on-screen buttons appear.</p>
+  <div class="grid" id="games"></div>
+</main>
+<footer id="expiry"></footer>
+
+<div class="modal-back hidden" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="play-title"></h2>
+      <span class="muted" id="play-by"></span>
+      <span class="spacer"></span>
+      <button class="btn" id="restart">🔄 Restart</button>
+      <button class="btn" id="close">✖ Close</button>
+    </div>
+    <p class="muted" id="play-desc"></p>
+    <p class="muted rotate-hint">📱↻ Turn your phone sideways for a bigger game.</p>
+    <div class="player" id="player"></div>
+  </div>
+</div>
+
+<script id="data" type="application/json">{"title": "1st Blisworth", "date": 1791112949.6439312, "expires": 1793704949.6445007, "games": [{"id": 1, "title": "Space Shooter", "description": "", "team": "Wolves", "emoji": "🐺", "stars": 4.0}], "awards": [{"label": "⭐ Top Rated", "detail": "4.0 stars from 1 team", "game_id": 1}]}</script>
+<script>
+const D = JSON.parse(document.getElementById("data").textContent);
+const $ = s => document.querySelector(s);
+const fmt = t => new Date(t * 1000).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
+document.title = D.title;
+$("#title").textContent = D.title;
+$("#when").textContent = `${fmt(D.date)} · ${D.games.length} game${D.games.length === 1 ? "" : "s"}`;
+$("#expiry").textContent = `This page will be removed after ${fmt(D.expires)}. Made with Scout Code · No adverts, no tracking, no accounts.`;
+
+const stars = avg => avg ? "★".repeat(Math.round(avg)) + "☆".repeat(5 - Math.round(avg)) : "";
+
+function card(g, extra) {
+  const c = document.createElement("button");
+  c.className = "card game";
+  c.innerHTML = (extra ? `<div class="award-label"></div>` : "") +
+    `<h3></h3><div class="by"></div><div class="muted desc"></div><div class="stars"></div>`;
+  if (extra) c.querySelector(".award-label").textContent = extra;
+  c.querySelector("h3").textContent = g.title;
+  c.querySelector(".by").textContent = `${g.emoji} ${g.team}`;
+  c.querySelector(".desc").textContent = g.description || "";
+  c.querySelector(".stars").textContent = stars(g.stars);
+  c.onclick = () => openGame(g);
+  return c;
+}
+
+for (const g of D.games) $("#games").append(card(g));
+if (D.awards.length) {
+  $("#awards-wrap").classList.remove("hidden");
+  for (const a of D.awards) {
+    const g = D.games.find(x => x.id === a.game_id);
+    if (g) $("#awards").append(card(g, `${a.label} · ${a.detail}`));
+  }
+}
+
+let current = null;
+function openGame(g) {
+  current = g;
+  $("#play-title").textContent = g.title;
+  $("#play-by").textContent = `by ${g.emoji} ${g.team}`;
+  $("#play-desc").textContent = g.description || "";
+  load();
+  $("#modal").classList.remove("hidden");
+}
+function load() {
+  const f = document.createElement("iframe");
+  f.setAttribute("sandbox", "allow-scripts");
+  f.setAttribute("title", current.title);
+  f.src = `games/${current.id}.html`;
+  f.addEventListener("load", () => f.focus());
+  $("#player").replaceChildren(f);
+}
+function close() { $("#modal").classList.add("hidden"); $("#player").replaceChildren(); current = null; }
+$("#restart").onclick = load;
+$("#close").onclick = close;
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") close(); });
+</script>
+</body>
+</html>
